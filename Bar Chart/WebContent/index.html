@@ -41,8 +41,12 @@ void main(void) {
 
 <body onload="webGLStart();">
 
-	<canvas id="gl-canvas" style="border: none;" width="800" height="600"></canvas>
-
+	<div style="position: relative;">
+		<canvas id="gl-canvas" style="border: none;" width="800" height="600"></canvas>
+		<canvas id="text-canvas"
+			style="position: absolute; left: 0px; top: 0px; z-index: 10;"
+			width="800" height="600"></canvas>
+	</div>
 
 	<!-- 	<h4>Background:</h4>
 	<button onclick="BG(1,0,0)">Red</button>

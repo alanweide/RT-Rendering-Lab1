@@ -1,4 +1,5 @@
 var gl;
+var textContext;
 var shaderProgram;
 var draw_type = 2;
 
@@ -12,7 +13,19 @@ function initGL(canvas) {
 	} catch (e) {
 	}
 	if (!gl) {
-		alert("Could not initialise WebGL, sorry :-(");
+		alert("Could not initialize WebGL canvas, sorry!");
+	}
+}
+
+function initText(canvas) {
+	try {
+		textContext = canvas.getContext("2d");
+		textContext.width = canvas.width;
+		textContext.height = canvas.height;
+	} catch (e) {
+	}
+	if (!textContext) {
+		alert("Could not initialize Text canvas, sorry!");
 	}
 }
 
@@ -25,13 +38,15 @@ var squareVertexIndexBuffer;
 var vertices = [];
 var indices = [];
 var colors = [];
+var axisLabelXs = [];
+var margin = 0.25;
 var num_vertices;
 var num_indices;
 var num_groups;
 var bars_per_group;
 
-var bar_colors = [ [ 1.0, 0.0, 0.0, 1.0 ], [ 0.0, 1.0, 0.0, 1.0 ],
-		[ 0.0, 0.0, 1.0, 1.0 ], [ 1.0, 1.0, 0.0, 1.0 ] ];
+var bar_colors = [ [ 0.7, 0.0, 0.0, 1.0 ], [ 0.0, 0.7, 0.0, 1.0 ],
+		[ 0.0, 0.0, 0.7, 1.0 ], [ 0.7, 0.7, 0.0, 1.0 ] ];
 
 function setColorForIndex(i) {
 	for (var count = 0; count < 4; count++) {
@@ -46,6 +61,7 @@ function createAllBarVertices(avgs) {
 	vertices = [];
 	indices = [];
 	colors = [];
+	axisLabelXs = [];
 
 	num_groups = avgs.length;
 	bars_per_group = avgs[0].length;
@@ -68,30 +84,30 @@ function createAllBarVertices(avgs) {
 	}
 	range = max - min;
 
-	var v_margin = 0.25;
-	var group_margin = 2 / (num_bars + 1);
-	var group_width = (2 - ((num_groups + 1) * group_margin)) / num_groups;
+	var group_margin = (2 - 2*margin) / num_bars;
+	var group_width = (2 - 2*margin - ((num_groups - 1) * group_margin)) / num_groups;
 	var bar_width = group_width / bars_per_group;
+	var bar_margin = bar_width / 6;
 	var l = 0;
 	for (var g = 0; g < num_groups; g++) {
 		for (var i = 0; i < bars_per_group; i++) {
 
-			vertices.push(-1 + g * group_width + (g + 1) * group_margin + i
-					* bar_width);
-			vertices.push(-1 + v_margin);
+			vertices.push(-1 + margin + g * group_margin + g * group_width + i
+					* bar_width + bar_margin / 2);
+			vertices.push(-1 + margin);
 			vertices.push(0.0);
-			vertices.push(-1 + g * group_width + (g + 1) * group_margin
-					+ (i + 1) * bar_width);
-			vertices.push(-1 + v_margin);
+			vertices.push(-1 + margin + g * group_margin + g * group_width
+					+ (i + 1) * bar_width - bar_margin / 2);
+			vertices.push(-1 + margin);
 			vertices.push(0.0);
-			vertices.push(-1 + g * group_width + (g + 1) * group_margin
-					+ (i + 1) * bar_width);
-			vertices.push(-1 + v_margin + (2 - 2 * v_margin)
+			vertices.push(-1 + margin + g * group_margin + g * group_width
+					+ (i + 1) * bar_width - bar_margin / 2);
+			vertices.push(-1 + margin + (2 - 2 * margin)
 					* (avgs[g][i] - min) / range);
 			vertices.push(0.0);
-			vertices.push(-1 + g * group_width + (g + 1) * group_margin + i
-					* bar_width);
-			vertices.push(-1 + v_margin + (2 - 2 * v_margin)
+			vertices.push(-1 + margin + g * group_margin + g * group_width + i
+					* bar_width + bar_margin / 2);
+			vertices.push(-1 + margin + (2 - 2 * margin)
 					* (avgs[g][i] - min) / range);
 			vertices.push(0.0);
 
@@ -102,10 +118,11 @@ function createAllBarVertices(avgs) {
 			indices.push(2 + 4 * l);
 			indices.push(3 + 4 * l);
 
-			setColorForIndex(i);
+			setColorForIndex(i % 4);
 
 			l++;
 		}
+		axisLabelXs.push((textContext.width / 2) * (margin + (g + 0.5) * group_width + g * group_margin));		
 	}
 	initBuffers();
 	drawScene();
@@ -116,6 +133,7 @@ function createSpeciesBarVertices(avgs) {
 	vertices = [];
 	indices = [];
 	colors = [];
+	axisLabelXs = [];
 
 	var num_bars = avgs.length;
 	num_vertices = num_bars * 4;
@@ -134,22 +152,21 @@ function createSpeciesBarVertices(avgs) {
 	}
 	range = max - min;
 
-	var v_margin = 0.25;
-	var h_margin = 2 / (3 * num_bars + 1);
+	var h_margin = (2 - 2*margin) / (3 * num_bars - 1);
 	for (var i = 0; i < num_bars; i++) {
 
-		vertices.push(-1 + (3 * i + 1) * h_margin);
-		vertices.push(-1 + v_margin);
+		vertices.push(-1 + margin + (3 * i) * h_margin);
+		vertices.push(-1 + margin);
 		vertices.push(0.0);
-		vertices.push(-1 + (3 * i + 3) * h_margin);
-		vertices.push(-1 + v_margin);
+		vertices.push(-1 + margin + (3 * i + 2) * h_margin);
+		vertices.push(-1 + margin);
 		vertices.push(0.0);
-		vertices.push(-1 + (3 * i + 3) * h_margin);
-		vertices.push(-1 + v_margin + (2 - 2 * v_margin) * (avgs[i] - min)
+		vertices.push(-1 + margin + (3 * i + 2) * h_margin);
+		vertices.push(-1 + margin + (2 - 2 * margin) * (avgs[i] - min)
 				/ range);
 		vertices.push(0.0);
-		vertices.push(-1 + (3 * i + 1) * h_margin);
-		vertices.push(-1 + v_margin + (2 - 2 * v_margin) * (avgs[i] - min)
+		vertices.push(-1 + margin + (3 * i) * h_margin);
+		vertices.push(-1 + margin + (2 - 2 * margin) * (avgs[i] - min)
 				/ range);
 		vertices.push(0.0);
 
@@ -160,7 +177,9 @@ function createSpeciesBarVertices(avgs) {
 		indices.push(2 + 4 * i);
 		indices.push(3 + 4 * i);
 
-		setColorForIndex(i);
+		setColorForIndex(i % 4);
+		
+		axisLabelXs.push((textContext.width / 2) * (margin + (3 * i + 1) * h_margin));
 	}
 
 	initBuffers();
@@ -193,6 +212,30 @@ function initBuffers() {
 	squareVertexColorBuffer.numItems = num_vertices;
 }
 
+function drawTextAndAxes(title, labelTitles) {
+    textContext.clearRect(0, 0, textContext.width, textContext.height);
+	
+	textContext.textAlign = "center";
+	textContext.font = "32px sans-serif";
+	textContext.textBaseline = "middle";
+	textContext.fillText(title, textContext.width/2, textContext.height*(margin / 4));
+	
+	textContext.font = "16pt sans-serif";
+	textContext.textBaseline = "hanging";
+	
+	for (var i = 0; i < labelTitles.length; i++) {
+		textContext.fillText(labelTitles[i], axisLabelXs[i], textContext.height - textContext.height*(margin/2) + 5);
+	}
+	
+	textContext.lineWidth = 3;
+	
+	textContext.beginPath();
+	textContext.moveTo(margin/2 * textContext.width, margin/2 * textContext.height - 10);
+	textContext.lineTo(margin/2 * textContext.width, textContext.height - (margin/2 * textContext.height));
+	textContext.lineTo(textContext.width - (margin/2 * textContext.width) + 10, textContext.height - (margin/2 * textContext.height));
+	textContext.stroke();
+}
+
 // ///////////////////////////////////////////////////////
 
 function drawScene() {
@@ -211,21 +254,26 @@ function drawScene() {
 	// draw elementary arrays - triangle indices
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareVertexIndexBuffer);
 	gl.drawElements(gl.TRIANGLES, num_indices, gl.UNSIGNED_SHORT, 0);
-
 }
 
 // ///////////////////////////////////////////////////////
 
 function webGLStart() {
-	var canvas = document.getElementById("gl-canvas");
-	initGL(canvas);
+	var glCanvas = document.getElementById("gl-canvas");
+	var textCanvas = document.getElementById("text-canvas");
+	initGL(glCanvas);
+	initText(textCanvas);
 	initShaders();
 
 	shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram,
 			"aVertexPosition");
 	gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
-	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram,
+			"aVertexColor");
+	gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
+
+	gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
 }
 
