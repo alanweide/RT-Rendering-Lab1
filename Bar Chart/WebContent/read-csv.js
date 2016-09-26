@@ -28,14 +28,15 @@ function processData(csv) {
 	while (allTextLines.length) {
 		lines.push(allTextLines.shift().split(','));
 	}
-	console.log(lines);
-	drawOutput(lines);
+//	drawOutput(lines);
 	set_data(lines);
+	csv_parse_data();
+	csvDrawAllBars();
 }
 
 function errorHandler(evt) {
 	if (evt.target.error.name == "NotReadableError") {
-		alert("Canno't read file !");
+		alert("Cannot read file!");
 	}
 }
 
