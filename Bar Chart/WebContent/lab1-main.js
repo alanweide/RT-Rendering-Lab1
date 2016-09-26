@@ -30,6 +30,17 @@ var num_indices;
 var num_groups;
 var bars_per_group;
 
+var bar_colors = [ [ 1.0, 0.0, 0.0, 1.0 ], [ 0.0, 1.0, 0.0, 1.0 ],
+		[ 0.0, 0.0, 1.0, 1.0 ], [ 1.0, 1.0, 0.0, 1.0 ] ];
+
+function setColorForIndex(i) {
+	for (var count = 0; count < 4; count++) {
+		for (var j = 0; j < 4; j++) {
+			colors.push(bar_colors[i][j]);
+		}
+	}
+}
+
 function createAllBarVertices(avgs) {
 
 	vertices = [];
@@ -91,10 +102,7 @@ function createAllBarVertices(avgs) {
 			indices.push(2 + 4 * l);
 			indices.push(3 + 4 * l);
 
-			colors.push(1.0, 0.0, 0.0, 1.0);
-			colors.push(0.0, 1.0, 0.0, 1.0);
-			colors.push(0.0, 0.0, 1.0, 1.0);
-			colors.push(1.0, 0.0, 0.0, 1.0);
+			setColorForIndex(i);
 
 			l++;
 		}
@@ -152,10 +160,7 @@ function createSpeciesBarVertices(avgs) {
 		indices.push(2 + 4 * i);
 		indices.push(3 + 4 * i);
 
-		colors.push(1.0, 0.0, 0.0, 1.0);
-		colors.push(0.0, 1.0, 0.0, 1.0);
-		colors.push(0.0, 0.0, 1.0, 1.0);
-		colors.push(1.0, 0.0, 0.0, 1.0);
+		setColorForIndex(i);
 	}
 
 	initBuffers();
@@ -180,12 +185,12 @@ function initBuffers() {
 			gl.STATIC_DRAW);
 	squareVertexIndexBuffer.itemsize = 1;
 	squareVertexIndexBuffer.numItems = num_indices;
-	
-    squareVertexColorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    squareVertexColorBuffer.itemSize = 4;
-    squareVertexColorBuffer.numItems = num_vertices;
+
+	squareVertexColorBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexColorBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+	squareVertexColorBuffer.itemSize = 4;
+	squareVertexColorBuffer.numItems = num_vertices;
 }
 
 // ///////////////////////////////////////////////////////
